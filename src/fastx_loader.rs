@@ -2,19 +2,19 @@
 extern crate needletail;
 
 use needletail::parse_fastx_file;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
-/// This is the main function for gathering all sequence lengths for a fastx file into a HashMap.
+/// This is the main function for gathering all sequence lengths for a fastx file into a BTreeMap.
 /// # Examples
 /// ```ignore
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 /// use fastleng::fastx_loader::gather_fastx_stats;
 /// let filename = "/path/to/file.fq.gz";
-/// let counts: HashMap<usize, u64> = gather_fastx_stats(&filename);
+/// let counts: BTreeMap<usize, u64> = gather_fastx_stats(&filename);
 /// ```
-pub fn gather_fastx_stats(filename: &str) -> HashMap<usize, u64> {
+pub fn gather_fastx_stats(filename: &str) -> BTreeMap<usize, u64> {
     //create an empty stats file and ready the reader
-    let mut hash_stats: HashMap<usize, u64> = HashMap::new();
+    let mut hash_stats: BTreeMap<usize, u64> = BTreeMap::new();
     let mut reader = parse_fastx_file(&filename).expect("valid fastx path/file");
 
     //go through all the records
@@ -53,8 +53,8 @@ A";
         temp_file
     }
 
-    fn stats_basic_fasta() -> HashMap<usize, u64> {
-        let mut results: HashMap<usize, u64> = HashMap::new();
+    fn stats_basic_fasta() -> BTreeMap<usize, u64> {
+        let mut results: BTreeMap<usize, u64> = BTreeMap::new();
         results.insert(1, 1);
         results
     }
@@ -81,8 +81,8 @@ AAAAA";
         temp_file
     }
 
-    fn stats_basic_fasta2() -> HashMap<usize, u64> {
-        let mut results: HashMap<usize, u64> = HashMap::new();
+    fn stats_basic_fasta2() -> BTreeMap<usize, u64> {
+        let mut results: BTreeMap<usize, u64> = BTreeMap::new();
         results.insert(1, 1);
         results.insert(2, 1);
         results.insert(3, 1);
@@ -119,8 +119,8 @@ A";
         temp_file
     }
 
-    fn stats_basic_fasta3() -> HashMap<usize, u64> {
-        let mut results: HashMap<usize, u64> = HashMap::new();
+    fn stats_basic_fasta3() -> BTreeMap<usize, u64> {
+        let mut results: BTreeMap<usize, u64> = BTreeMap::new();
         results.insert(1, 3);
         results.insert(2, 2);
         results.insert(3, 1);
