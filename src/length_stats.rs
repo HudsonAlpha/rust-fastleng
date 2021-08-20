@@ -43,15 +43,37 @@ pub fn compute_total_counts(length_counts: &BTreeMap<usize, u64>) -> (u64, u64) 
 /// assert_eq!(median_length, 5.0);
 /// ```
 pub fn compute_median_length(length_counts: &BTreeMap<usize, u64>, total_seqs: u64) -> f64 {
+    //find the middle index
     let middle_seq_index: u64 = total_seqs / 2;
     let mut total_observed = 0;
-    for (key, value) in length_counts.iter() {
-        total_observed += value;
+    for (seq_len, seq_count) in length_counts.iter() {
+        total_observed += seq_count;
+
+        //loop until we observe more than the target index
         if total_observed > middle_seq_index {
-            return *key as f64;
+            return *seq_len as f64;
         }
     }
+
+    //this case only happens with empty files
+    assert!(total_seqs == 0 && length_counts.len() == 0);
     0.0
+}
+
+pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, target: usize) -> usize {
+    //calculate the target number of bases
+    let target_bases: f64 = (target as u64*total_bases) as f64 / 100.0;
+    let mut current_bases: u64 = 0;
+    for (seq_len, seq_count) in length_counts.iter().rev() {
+        current_bases += (*seq_len as u64) * *seq_count;
+        if current_bases as f64 >= target_bases {
+            return *seq_len;
+        }
+    }
+
+    //this only happens with empty files
+    assert!(total_bases == 0 && length_counts.len() == 0);
+    0
 }
 
 /// This will compute multiple different summary statistics based on the length BTreeMap and return a HashMap with all the various metrics
@@ -143,6 +165,81 @@ mod tests {
         let (_total_bases, total_seqs) = compute_total_counts(&seq_lens);
         let median: f64 = compute_median_length(&seq_lens, total_seqs);
         assert_eq!(median, 3.0);
+    }
+
+    #[test]
+    fn test_compute_n_score() {
+        let seq_lens: BTreeMap<usize, u64> = [
+            (1, 1),
+            (2, 1),
+            (3, 1)
+        ].iter().cloned().collect();
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        let n_score = compute_n_score(&seq_lens, total_bases, 50);
+        assert_eq!(n_score, 3);
+        
+        let seq_lens: BTreeMap<usize, u64> = [
+            (1, 1),
+            (2, 1),
+            (3, 1),
+            (4, 1)
+        ].iter().cloned().collect();
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        let n_score = compute_n_score(&seq_lens, total_bases, 50);
+        assert_eq!(n_score, 3);
+
+        let seq_lens: BTreeMap<usize, u64> = [
+            (1, 1),
+            (2, 2),
+            (3, 1)
+        ].iter().cloned().collect();
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        let n_score = compute_n_score(&seq_lens, total_bases, 50);
+        assert_eq!(n_score, 2);
+
+        let seq_lens: BTreeMap<usize, u64> = [
+            (2, 3),
+            (3, 2),
+            (4, 1)
+        ].iter().cloned().collect();
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        let n_score = compute_n_score(&seq_lens, total_bases, 50);
+        assert_eq!(n_score, 3);
+
+        let seq_lens: BTreeMap<usize, u64> = [
+            (1, 1000),
+            (1000, 1)
+        ].iter().cloned().collect();
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        let n_score = compute_n_score(&seq_lens, total_bases, 50);
+        assert_eq!(n_score, 1000);
+
+        let seq_lens: BTreeMap<usize, u64> = [
+            (1, 1001),
+            (1000, 1)
+        ].iter().cloned().collect();
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        let n_score = compute_n_score(&seq_lens, total_bases, 50);
+        assert_eq!(n_score, 1);
+
+        let mut seq_lens: BTreeMap<usize, u64> = BTreeMap::new();
+        for x in 1..101 {
+            seq_lens.insert(x, 1);
+        }
+        let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
+        
+        for n_value in 1..100 {
+            let n_score = compute_n_score(&seq_lens, total_bases, n_value);
+            let target_value = (total_bases as f64) * (n_value as f64 / 100.0);
+            let mut total_count: u64 = 0;
+            for (seq_len, seq_count) in seq_lens.iter() {
+                if *seq_len >= n_score {
+                    total_count += (*seq_len as u64) * *seq_count;
+                }
+            }
+            //println!("{} {} {} {}", n_value, n_score, total_count, target_value);
+            assert!((total_count as f64) >= target_value);
+        }
     }
 
     #[test]
