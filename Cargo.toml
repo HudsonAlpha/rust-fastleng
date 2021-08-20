@@ -1,0 +1,16 @@
+[package]
+name = "fastleng"
+version = "0.1.0"
+authors = ["holtjma <jholt@hudsonalpha.org>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+needletail = "0.4.1"
+
+[dev-dependencies]
+tempfile = "3.2.0"
+
+[profile.release]
+lto = true
