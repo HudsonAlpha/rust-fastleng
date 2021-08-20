@@ -48,7 +48,7 @@ mod tests {
         let data_string = b">1
 A";
         fasta_file.write_all(data_string).unwrap();
-        fasta_file.flush();
+        fasta_file.flush().unwrap();
 
         temp_file
     }
@@ -76,7 +76,7 @@ AAAA
 >5
 AAAAA";
         fasta_file.write_all(data_string).unwrap();
-        fasta_file.flush();
+        fasta_file.flush().unwrap();
 
         temp_file
     }
@@ -114,7 +114,7 @@ AAAA
 >8
 A";
         fasta_file.write_all(data_string).unwrap();
-        fasta_file.flush();
+        fasta_file.flush().unwrap();
 
         temp_file
     }
