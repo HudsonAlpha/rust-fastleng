@@ -30,15 +30,16 @@ pub fn compute_total_counts(length_counts: &BTreeMap<usize, u64>) -> (u64, u64) 
 /// This metric is imprecise for some instances of an even number of sequences (e.g. does not take the mean).
 /// # Arguments
 /// * `length_counts` - a BTreeMap with the sequence length as the key, and the value the total number of sequences with that length
+/// * `total_seqs` - the total number of sequences represented by `length_counts`, this can be computed by `compute_total_counts(...)`
 /// # Examples
 /// ```
 /// use std::collections::BTreeMap;
-/// use fastleng::length_stats::compute_median_length;
+/// use fastleng::length_stats::{compute_median_length,compute_total_counts};
 /// let length_counts: BTreeMap<usize, u64> = [
 ///     (5, 10),
 ///     (10, 3)
 /// ].iter().cloned().collect();
-/// let total_seqs = 13;
+/// let (_total_bases, total_seqs) = compute_total_counts(&length_counts);
 /// let median_length = compute_median_length(&length_counts, total_seqs);
 /// assert_eq!(median_length, 5.0);
 /// ```
@@ -60,7 +61,28 @@ pub fn compute_median_length(length_counts: &BTreeMap<usize, u64>, total_seqs: u
     0.0
 }
 
+/// This will compute the N-score (e.g. N50) for the sequence lengths provided. 
+/// For details on this measure, see https://www.molecularecologist.com/2017/03/29/whats-n50/.
+/// # Arguments
+/// * `length_counts` - a BTreeMap with the sequence length as the key, and the value the total number of sequences with that length
+/// * `total_bases` - the total number of bases represented by the `length_counts` parameter, this can be computed by `compute_total_counts(...)`
+/// * `target` - the score target; e.g. for N50, N75, and N90, this parameter should be 50, 75, and 90 respectively
+/// # Examples
+/// ```
+/// use std::collections::BTreeMap;
+/// use fastleng::length_stats::{compute_n_score,compute_total_counts};
+/// let length_counts: BTreeMap<usize, u64> = [
+///     (5, 10),
+///     (10, 3)
+/// ].iter().cloned().collect();
+/// let (total_bases, _total_seqs) = compute_total_counts(&length_counts);
+/// let n50_score = compute_n_score(&length_counts, total_bases, 50);
+/// assert_eq!(n50_score, 5);
+/// ```
 pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, target: usize) -> usize {
+    //make sure this is in our allowed range
+    assert!(target >= 1 && target <= 99);
+
     //calculate the target number of bases
     let target_bases: f64 = (target as u64*total_bases) as f64 / 100.0;
     let mut current_bases: u64 = 0;
