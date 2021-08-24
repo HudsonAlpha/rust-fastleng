@@ -1,8 +1,13 @@
 
 extern crate clap;
+extern crate env_logger;
+extern crate exitcode;
+extern crate log;
 
 use clap::{App, Arg};
+use log::{info, error};
 use std::collections::BTreeMap;
+use std::fs::File;
 
 use fastleng::fastx_loader::gather_fastx_stats;
 use fastleng::length_stats::{LengthStats,compute_length_stats};
@@ -10,8 +15,8 @@ use fastleng::length_stats::{LengthStats,compute_length_stats};
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
 fn main() {
-    //let test_file = "/Users/matt/Downloads/test_1M.fq.gz";
-    //let test_file = "/Users/matt/Downloads/test_100k_pb.fq.gz";
+    //initialize logging for our benefit later
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let matches = App::new("fastleng")
         .version(VERSION.unwrap_or("?"))
@@ -25,12 +30,26 @@ fn main() {
     
     let fastx_fn: String = matches.value_of("FASTX").unwrap().to_string();
 
+    info!("Input parameters (required):");
+    info!("\tFASTX: \"{}\"", fastx_fn);
+    match File::open(&fastx_fn) {
+        Ok(_) => {},
+        Err(e) => {
+            error!("Failed to open FASTX file: {:?}", e);
+            std::process::exit(exitcode::NOINPUT);
+        }
+    };
+
     //load the fastx file lengths
     let length_counts: BTreeMap<usize, u64> = gather_fastx_stats(&fastx_fn);
     
     //compute the stats
     let length_metrics: LengthStats = compute_length_stats(&length_counts);
     // Serialize it to a JSON string.
-    let json_format: String = serde_json::to_string_pretty(&length_metrics).unwrap();
-    println!("{}", json_format);
+    let json_format: String = serde_json::to_string(&length_metrics).unwrap();
+    info!("Length metrics: {}", json_format);
+    
+    //TODO: this is what we should put in the file
+    //let pretty_json: String = serde_json::to_string_pretty(&length_metrics).unwrap();
+    
 }
