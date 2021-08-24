@@ -241,6 +241,8 @@ mod tests {
         let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
         let n_score = compute_n_score(&seq_lens, total_bases, 50);
         assert_eq!(n_score, 1000);
+        let n_score = compute_n_score(&seq_lens, total_bases, 51);
+        assert_eq!(n_score, 1);
 
         let seq_lens: BTreeMap<usize, u64> = [
             (1, 1001),
@@ -249,6 +251,8 @@ mod tests {
         let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
         let n_score = compute_n_score(&seq_lens, total_bases, 50);
         assert_eq!(n_score, 1);
+        let n_score = compute_n_score(&seq_lens, total_bases, 49);
+        assert_eq!(n_score, 1000);
 
         let mut seq_lens: BTreeMap<usize, u64> = BTreeMap::new();
         for x in 1..101 {
@@ -256,6 +260,7 @@ mod tests {
         }
         let (total_bases, _total_seqs) = compute_total_counts(&seq_lens);
         
+        //do a test of all of the different n_values here
         for n_value in 1..100 {
             let n_score = compute_n_score(&seq_lens, total_bases, n_value);
             let target_value = (total_bases as f64) * (n_value as f64 / 100.0);
