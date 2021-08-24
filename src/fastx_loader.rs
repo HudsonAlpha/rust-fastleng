@@ -62,6 +62,16 @@ mod tests {
         results
     }
 
+    /// some longer strings
+    fn stats_basic_fasta4() -> BTreeMap<usize, u64> {
+        let mut results: BTreeMap<usize, u64> = BTreeMap::new();
+        results.insert(50, 2);
+        results.insert(100, 2);
+        results.insert(150, 2);
+        results.insert(1000, 1);
+        results
+    }
+
     #[test]
     fn test_basic_fasta() {
         //build some inputs
@@ -95,6 +105,19 @@ mod tests {
 
         //get the expected outputs
         let expected = stats_basic_fasta3();
+
+        //now do it for real
+        let hash_stats = gather_fastx_stats(&filename);
+        assert_eq!(hash_stats, expected);
+    }
+
+    #[test]
+    fn test_basic_fasta4() {
+        //build some inputs
+        let filename = "./test_data/long_strings.fa";
+
+        //get the expected outputs
+        let expected = stats_basic_fasta4();
 
         //now do it for real
         let hash_stats = gather_fastx_stats(&filename);
