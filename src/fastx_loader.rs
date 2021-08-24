@@ -10,12 +10,12 @@ use std::collections::BTreeMap;
 /// use std::collections::BTreeMap;
 /// use fastleng::fastx_loader::gather_fastx_stats;
 /// let filename = "/path/to/file.fq.gz";
-/// let counts: BTreeMap<usize, u64> = gather_fastx_stats(&filename);
+/// let counts: BTreeMap<usize, u64> = gather_fastx_stats(&filename).unwrap();
 /// ```
-pub fn gather_fastx_stats(filename: &str) -> BTreeMap<usize, u64> {
+pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dyn std::error::Error>> {
     //create an empty stats file and ready the reader
     let mut hash_stats: BTreeMap<usize, u64> = BTreeMap::new();
-    let mut reader = parse_fastx_file(&filename).expect("valid fastx path/file");
+    let mut reader = parse_fastx_file(&filename)?;
 
     //go through all the records
     while let Some(record) = reader.next() {
@@ -29,7 +29,7 @@ pub fn gather_fastx_stats(filename: &str) -> BTreeMap<usize, u64> {
     }
 
     //return the full count list now
-    hash_stats
+    Ok(hash_stats)
 }
 
 #[cfg(test)]
@@ -81,7 +81,7 @@ mod tests {
         let expected = stats_basic_fasta();
 
         //now do it for real
-        let hash_stats = gather_fastx_stats(&filename);
+        let hash_stats = gather_fastx_stats(&filename).unwrap();
         assert_eq!(hash_stats, expected);
     }
 
@@ -94,7 +94,7 @@ mod tests {
         let expected = stats_basic_fasta2();
 
         //now do it for real
-        let hash_stats = gather_fastx_stats(&filename);
+        let hash_stats = gather_fastx_stats(&filename).unwrap();
         assert_eq!(hash_stats, expected);
     }
 
@@ -107,7 +107,7 @@ mod tests {
         let expected = stats_basic_fasta3();
 
         //now do it for real
-        let hash_stats = gather_fastx_stats(&filename);
+        let hash_stats = gather_fastx_stats(&filename).unwrap();
         assert_eq!(hash_stats, expected);
     }
 
@@ -120,7 +120,7 @@ mod tests {
         let expected = stats_basic_fasta4();
 
         //now do it for real
-        let hash_stats = gather_fastx_stats(&filename);
+        let hash_stats = gather_fastx_stats(&filename).unwrap();
         assert_eq!(hash_stats, expected);
     }
 }

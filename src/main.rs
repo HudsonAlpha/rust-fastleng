@@ -35,13 +35,21 @@ fn main() {
     match File::open(&fastx_fn) {
         Ok(_) => {},
         Err(e) => {
-            error!("Failed to open FASTX file: {:?}", e);
+            error!("Failed to open FASTX file: {:?}", fastx_fn);
+            error!("Error: {:?}", e);
             std::process::exit(exitcode::NOINPUT);
         }
     };
 
     //load the fastx file lengths
-    let length_counts: BTreeMap<usize, u64> = gather_fastx_stats(&fastx_fn);
+    let length_counts: BTreeMap<usize, u64> = match gather_fastx_stats(&fastx_fn) {
+        Ok(result) => result,
+        Err(e) => {
+            error!("Error while parsing FASTX file: {:?}", fastx_fn);
+            error!("Error: {:?}", e);
+            std::process::exit(exitcode::IOERR);
+        }
+    };
     
     //compute the stats
     let length_metrics: LengthStats = compute_length_stats(&length_counts);
