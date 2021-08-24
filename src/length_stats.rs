@@ -115,15 +115,21 @@ pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, t
 /// ```
 pub fn compute_length_stats(length_counts: &BTreeMap<usize, u64>) -> HashMap<String, f64> {
     //first get all the totals
-    let (total_bases, total_seqs) = compute_total_counts(length_counts);
-    let median_length = compute_median_length(length_counts, total_seqs);
+    let (total_bases, total_seqs): (u64, u64) = compute_total_counts(length_counts);
+    let median_length: f64 = compute_median_length(length_counts, total_seqs);
+    let n50: usize = compute_n_score(length_counts, total_bases, 50);
+    let n75: usize = compute_n_score(length_counts, total_bases, 75);
+    let n90: usize = compute_n_score(length_counts, total_bases, 90);
 
     //now put the composite stats together
     let final_stats: HashMap<String, f64> = [
         ("total_bases".to_string(), total_bases as f64),
         ("total_sequences".to_string(), total_seqs as f64),
         ("mean_length".to_string(), (total_bases as f64) / (total_seqs as f64)),
-        ("median_length".to_string(), median_length)
+        ("median_length".to_string(), median_length),
+        ("n50".to_string(), n50 as f64),
+        ("n75".to_string(), n75 as f64),
+        ("n90".to_string(), n90 as f64)
     ].iter().cloned().collect();
     final_stats
 }
@@ -274,7 +280,10 @@ mod tests {
             ("total_bases".to_string(), 1000.0),
             ("total_sequences".to_string(), 100.0),
             ("mean_length".to_string(), 10.0),
-            ("median_length".to_string(), 10.0)
+            ("median_length".to_string(), 10.0),
+            ("n50".to_string(), 10.0),
+            ("n75".to_string(), 10.0),
+            ("n90".to_string(), 10.0)
         ].iter().cloned().collect();
 
         let actual_stats: HashMap<String, f64> = compute_length_stats(&seq_lens);
