@@ -1,5 +1,8 @@
 
-use std::collections::{BTreeMap,HashMap};
+extern crate serde;
+
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// This will compute the total number of bases and sequences by iterating over the length stats and return a tuple (`total_bases`, `total_seqs`).
 /// # Arguments
@@ -57,7 +60,7 @@ pub fn compute_median_length(length_counts: &BTreeMap<usize, u64>, total_seqs: u
     }
 
     //this case only happens with empty files
-    assert!(total_seqs == 0 && length_counts.len() == 0);
+    assert!(total_seqs == 0 && length_counts.is_empty());
     0.0
 }
 
@@ -94,8 +97,19 @@ pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, t
     }
 
     //this only happens with empty files
-    assert!(total_bases == 0 && length_counts.len() == 0);
+    assert!(total_bases == 0 && length_counts.is_empty());
     0
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct LengthStats {
+    pub total_bases: u64,
+    pub total_sequences: u64,
+    pub mean_length: f64,
+    pub median_length: f64,
+    pub n50: usize,
+    pub n75: usize,
+    pub n90: usize
 }
 
 /// This will compute multiple different summary statistics based on the length BTreeMap and return a HashMap with all the various metrics
@@ -104,16 +118,16 @@ pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, t
 /// # Examples
 /// ```
 /// use std::collections::{BTreeMap,HashMap};
-/// use fastleng::length_stats::compute_length_stats;
+/// use fastleng::length_stats::{compute_length_stats,LengthStats};
 /// let length_counts: BTreeMap<usize, u64> = [
 ///     (5, 10),
 ///     (10, 3)
 /// ].iter().cloned().collect();
-/// let summary_stats: HashMap<String, f64> = compute_length_stats(&length_counts);
-/// assert_eq!(summary_stats.get("total_bases"), Some(&80.0));
-/// assert_eq!(summary_stats.get("total_sequences"), Some(&13.0));
+/// let summary_stats: LengthStats = compute_length_stats(&length_counts);
+/// assert_eq!(summary_stats.total_bases, 80);
+/// assert_eq!(summary_stats.total_sequences, 13);
 /// ```
-pub fn compute_length_stats(length_counts: &BTreeMap<usize, u64>) -> HashMap<String, f64> {
+pub fn compute_length_stats(length_counts: &BTreeMap<usize, u64>) -> LengthStats {
     //first get all the totals
     let (total_bases, total_seqs): (u64, u64) = compute_total_counts(length_counts);
     let median_length: f64 = compute_median_length(length_counts, total_seqs);
@@ -122,15 +136,15 @@ pub fn compute_length_stats(length_counts: &BTreeMap<usize, u64>) -> HashMap<Str
     let n90: usize = compute_n_score(length_counts, total_bases, 90);
 
     //now put the composite stats together
-    let final_stats: HashMap<String, f64> = [
-        ("total_bases".to_string(), total_bases as f64),
-        ("total_sequences".to_string(), total_seqs as f64),
-        ("mean_length".to_string(), (total_bases as f64) / (total_seqs as f64)),
-        ("median_length".to_string(), median_length),
-        ("n50".to_string(), n50 as f64),
-        ("n75".to_string(), n75 as f64),
-        ("n90".to_string(), n90 as f64)
-    ].iter().cloned().collect();
+    let final_stats: LengthStats = LengthStats {
+        total_bases, 
+        total_sequences: total_seqs,
+        mean_length: (total_bases as f64) / (total_seqs as f64),
+        median_length,
+        n50,
+        n75,
+        n90
+    };
     final_stats
 }
 
@@ -281,17 +295,17 @@ mod tests {
             (10, 100)
         ].iter().cloned().collect();
 
-        let expected_stats: HashMap<String, f64> = [
-            ("total_bases".to_string(), 1000.0),
-            ("total_sequences".to_string(), 100.0),
-            ("mean_length".to_string(), 10.0),
-            ("median_length".to_string(), 10.0),
-            ("n50".to_string(), 10.0),
-            ("n75".to_string(), 10.0),
-            ("n90".to_string(), 10.0)
-        ].iter().cloned().collect();
+        let expected_stats: LengthStats = LengthStats {
+            total_bases: 1000,
+            total_sequences: 100,
+            mean_length: 10.0,
+            median_length: 10.0,
+            n50: 10,
+            n75: 10,
+            n90: 10
+        };
 
-        let actual_stats: HashMap<String, f64> = compute_length_stats(&seq_lens);
+        let actual_stats: LengthStats = compute_length_stats(&seq_lens);
         assert_eq!(expected_stats, actual_stats);
     }
 }
