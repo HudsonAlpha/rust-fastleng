@@ -60,6 +60,6 @@ fn main() {
     info!("Length metrics: {}", json_format);
 
     //TODO: this is what we should put in the file
-    //let pretty_json: String = serde_json::to_string_pretty(&length_metrics).unwrap();
-    
+    let pretty_json: String = serde_json::to_string_pretty(&length_metrics).unwrap();
+    println!("{}", pretty_json);
 }
