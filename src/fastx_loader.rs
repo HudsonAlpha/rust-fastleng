@@ -1,8 +1,10 @@
 
+extern crate log;
 extern crate needletail;
 
+use log::info;
 use needletail::parse_fastx_file;
-use std::collections::{BTreeMap,HashMap};
+use std::collections::BTreeMap;
 
 /// This is the main function for gathering all sequence lengths for a fastx file into a BTreeMap.
 /// # Examples
@@ -14,10 +16,11 @@ use std::collections::{BTreeMap,HashMap};
 /// ```
 pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dyn std::error::Error>> {
     //create an empty stats file and ready the reader
-    let mut hash_stats: HashMap<usize, u64> = HashMap::new();
+    let mut hash_stats: BTreeMap<usize, u64> = BTreeMap::new();
     let mut reader = parse_fastx_file(&filename)?;
 
     //go through all the records
+    let mut count: usize = 0;
     while let Some(record) = reader.next() {
         //all we care about is the sequence length
         let seq_rec = record?;
@@ -26,12 +29,15 @@ pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dy
         //insert 0 if absent; then increment
         let len_count: &mut u64 = hash_stats.entry(seq_len).or_insert(0);
         *len_count += 1;
+        
+        count += 1;
+        if count % 1000000 == 0 {
+            info!("Processed {} sequences", count);
+        }
     }
 
-    let sorted_hash_stats: BTreeMap<usize, u64> = hash_stats.into_iter().collect();
-
     //return the full count list now
-    Ok(sorted_hash_stats)
+    Ok(hash_stats)
 }
 
 #[cfg(test)]
