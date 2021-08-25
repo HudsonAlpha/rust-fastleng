@@ -84,7 +84,7 @@ pub fn compute_median_length(length_counts: &BTreeMap<usize, u64>, total_seqs: u
 /// ```
 pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, target: usize) -> usize {
     //make sure this is in our allowed range
-    assert!(target >= 1 && target <= 99);
+    assert!((1..=99).contains(&target));
 
     //calculate the target number of bases
     let target_bases: f64 = (target as u64*total_bases) as f64 / 100.0;
