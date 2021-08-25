@@ -65,7 +65,7 @@ pub fn compute_median_length(length_counts: &BTreeMap<usize, u64>, total_seqs: u
 }
 
 /// This will compute the N-score (e.g. N50) for the sequence lengths provided. 
-/// For details on this measure, see https://www.molecularecologist.com/2017/03/29/whats-n50/.
+/// For details on this measure, see <https://www.molecularecologist.com/2017/03/29/whats-n50/>.
 /// # Arguments
 /// * `length_counts` - a BTreeMap with the sequence length as the key, and the value the total number of sequences with that length
 /// * `total_bases` - the total number of bases represented by the `length_counts` parameter, this can be computed by `compute_total_counts(...)`
@@ -101,14 +101,22 @@ pub fn compute_n_score(length_counts: &BTreeMap<usize, u64>, total_bases: u64, t
     0
 }
 
+/// This struct encapsulates the various statistics we return
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct LengthStats {
+    /// The total number of bases analyzed
     pub total_bases: u64,
+    /// The total number of sequences (i.e. strings) analyzed
     pub total_sequences: u64,
+    /// The average length of the sequences
     pub mean_length: f64,
+    /// The median length of the sequences
     pub median_length: f64,
+    /// N50 - 50% of bases are in sequences of length greater than this value
     pub n50: usize,
+    /// N75 - 75% of bases are in sequences of length greater than this value
     pub n75: usize,
+    /// N90 - 90% of bases are in sequences of length greater than this value
     pub n90: usize
 }
 
@@ -117,7 +125,7 @@ pub struct LengthStats {
 /// * `length_counts` - a BTreeMap with the sequence length as the key, and the value the total number of sequences with that length
 /// # Examples
 /// ```
-/// use std::collections::{BTreeMap,HashMap};
+/// use std::collections::BTreeMap;
 /// use fastleng::length_stats::{compute_length_stats,LengthStats};
 /// let length_counts: BTreeMap<usize, u64> = [
 ///     (5, 10),

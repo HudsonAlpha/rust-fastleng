@@ -8,10 +8,10 @@ use std::collections::BTreeMap;
 
 /// This is the main function for gathering all sequence lengths for a fastx file into a BTreeMap.
 /// # Examples
-/// ```ignore
+/// ```
 /// use std::collections::BTreeMap;
 /// use fastleng::fastx_loader::gather_fastx_stats;
-/// let filename = "/path/to/file.fq.gz";
+/// let filename = "./test_data/single_string.fa";
 /// let counts: BTreeMap<usize, u64> = gather_fastx_stats(&filename).unwrap();
 /// ```
 pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dyn std::error::Error>> {
