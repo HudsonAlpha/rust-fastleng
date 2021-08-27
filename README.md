@@ -54,6 +54,8 @@ fastleng {data.fq.gz} > {output.json}
 
 ### Options to consider
 1. `-h` - see full list of options and exit
+2. `-l`, `--length-json` - enables the saving of the raw length counts to a specified JSON file
+3. `-o`, `--out-json` - enabled used to specify the filename to write the length statistics to (default: stdout)
 
 ## TODO List
 1. Create an option for other N-score values (or maybe all integer N-score values)
