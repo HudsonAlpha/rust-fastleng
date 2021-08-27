@@ -4,7 +4,15 @@
 [![Build status](https://github.com/HudsonAlpha/rust-fastleng/actions/workflows/quickstart-ci.yml/badge.svg)](https://github.com/HudsonAlpha/rust-fastleng/actions)
 
 # rust-fastleng
-Fastleng is a tool create specifically for gathering sequence length information from a FASTQ or FASTA file.
+`fastleng` is a tool created specifically for gathering sequence length information from a FASTQ or FASTA file.
+
+### Why another FASTX stat tool?
+While there are numerous tools that will generate summary statistics for FASTX files, I was not able to find one that computed all the desired length metrics for _both_ FASTQ and FASTA.
+[pyfastx](https://pyfastx.readthedocs.io/en/latest/) was the closest, but it seems to limit certain statistics (e.g. N50) to only one file type.
+
+In constrast, aside from the initial parsing, `fastleng` is agnostic to the file type.
+However, it is (currently) focused only on generating metrics derived from the sequence lengths.
+For more comprehensive metrics, it may be better to use tools like [pyfastx](https://pyfastx.readthedocs.io/en/latest/) or [fastp](https://github.com/OpenGene/fastp).
 
 ## Installation
 All installation options assume you have installed [Rust](https://www.rust-lang.org) along with the `cargo` crate manager for Rust.
