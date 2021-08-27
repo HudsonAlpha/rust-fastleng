@@ -45,7 +45,7 @@ fn main() {
         )
         .get_matches();
 
-    let fastx_fns: Vec<String> = values_t!(matches.values_of("FASTX"), String).unwrap_or(vec![]);
+    let fastx_fns: Vec<String> = values_t!(matches.values_of("FASTX"), String).unwrap_or_else(|_| vec![]);
     let out_fn: String = value_t!(matches.value_of("out_json"), String).unwrap_or_else(|_| "stdout".to_string());
     let length_fn: String = value_t!(matches.value_of("length_json"), String).unwrap_or_else(|_| "".to_string());
 
@@ -78,7 +78,7 @@ fn main() {
             }
         };
     }
-    if length_fn != "" {
+    if length_fn.is_empty() {
         match File::create(&length_fn) {
             Ok(file) => file,
             Err(e) => {
@@ -123,7 +123,7 @@ fn main() {
         serde_json::to_writer_pretty(out_file, &length_metrics).unwrap();
     }
 
-    if length_fn != "" {
+    if length_fn.is_empty() {
         info!("Saving length counts to file: {:?}", length_fn);
         let out_file = match File::create(&length_fn) {
             Ok(file) => file,
