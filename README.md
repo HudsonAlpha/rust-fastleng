@@ -57,9 +57,9 @@ fastleng {data.fq.gz} > {output.json}
 
 ## TODO List
 1. Create an option for saving the length data as a JSON
-2. Create an option for writing the output directly to a file instead of stdout
 3. Create an option for other N-score values (or maybe all integer N-score values)
-4. If you have other length-based statistics, feel free to open a feature request on GitHub.
+4. Enable the parsing of multiple fastx files in one CLI call
+5. If you have other length-based statistics, feel free to open a feature request on GitHub.
 
 ## Performance notes
 We have not performed formal benchmarking.

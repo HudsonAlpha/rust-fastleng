@@ -4,7 +4,7 @@ extern crate env_logger;
 extern crate exitcode;
 extern crate log;
 
-use clap::{App, Arg};
+use clap::{App, Arg, value_t};
 use log::{error, info};
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -23,6 +23,13 @@ fn main() {
         .author("J. Matthew Holt <jholt@hudsonalpha.org>")
         .about("fastleng - a sequence length statistics generator for fastx files")
         .arg(
+            Arg::with_name("out_json")
+            .short("o")
+            .long("--out-json")
+            .takes_value(true)
+            .help("The output statistics json (default: stdout)")
+        )
+        .arg(
             Arg::with_name("FASTX")
                 .help("The FASTQ/A file to gather stats on, gzip accepted")
                 .required(true)
@@ -31,9 +38,11 @@ fn main() {
         .get_matches();
 
     let fastx_fn: String = matches.value_of("FASTX").unwrap().to_string();
+    let out_fn: String = value_t!(matches.value_of("out_json"), String).unwrap_or_else(|_| "stdout".to_string());
 
     info!("Input parameters (required):");
     info!("\tFASTX: \"{}\"", fastx_fn);
+
     match File::open(&fastx_fn) {
         Ok(_) => {}
         Err(e) => {
@@ -42,6 +51,17 @@ fn main() {
             std::process::exit(exitcode::NOINPUT);
         }
     };
+
+    if out_fn != "stdout" {
+        match File::create(&out_fn) {
+            Ok(file) => file,
+            Err(e) => {
+                error!("Failed to create output JSON file: {:?}", out_fn);
+                error!("Error: {:?}", e);
+                std::process::exit(exitcode::NOINPUT);
+            }
+        };
+    }
 
     //load the fastx file lengths
     let length_counts: BTreeMap<usize, u64> = match gather_fastx_stats(&fastx_fn) {
@@ -60,6 +80,22 @@ fn main() {
     info!("Length metrics: {}", json_format);
 
     //this is what we should put in the file
-    let pretty_json: String = serde_json::to_string_pretty(&length_metrics).unwrap();
-    println!("{}", pretty_json);
+    if out_fn == "stdout" {
+        let pretty_json: String = serde_json::to_string_pretty(&length_metrics).unwrap();
+        println!("{}", pretty_json);
+    }
+    else {
+        info!("Saving results to file: {}", out_fn);
+        let out_file = match File::create(&out_fn) {
+            Ok(file) => file,
+            Err(e) => {
+                error!("Failed to create output JSON file: {:?}", out_fn);
+                error!("Error: {:?}", e);
+                std::process::exit(exitcode::NOINPUT);
+            }
+        };
+        serde_json::to_writer_pretty(out_file, &length_metrics).unwrap();
+    }
+
+    info!("Processes successfully finished.")
 }
