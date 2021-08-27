@@ -59,8 +59,7 @@ fastleng {data.fq.gz} > {output.json}
 
 ## TODO List
 1. Create an option for other N-score values (or maybe all integer N-score values)
-2. Enable the parsing of multiple fastx files in one CLI call
-3. If you have other length-based statistics, feel free to open a feature request on GitHub.
+2. If you have other length-based statistics, feel free to open a feature request on GitHub.
 
 ## Performance notes
 We have not performed formal benchmarking.
