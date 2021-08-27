@@ -21,6 +21,7 @@ pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dy
 
     //go through all the records
     let mut count: usize = 0;
+    info!("Loading file \"{}\"...", filename);
     while let Some(record) = reader.next() {
         //all we care about is the sequence length
         let seq_rec = record?;
@@ -35,6 +36,7 @@ pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dy
             info!("Processed {} sequences", count);
         }
     }
+    info!("Finished loading file with {} sequences.", count);
 
     //return the full count list now
     Ok(hash_stats)
