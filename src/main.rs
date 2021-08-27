@@ -4,12 +4,12 @@ extern crate env_logger;
 extern crate exitcode;
 extern crate log;
 
-use clap::{App, Arg, value_t};
+use clap::{App, Arg, value_t, values_t};
 use log::{error, info};
 use std::collections::BTreeMap;
 use std::fs::File;
 
-use fastleng::fastx_loader::gather_fastx_stats;
+use fastleng::fastx_loader::gather_multifastx_stats;
 use fastleng::length_stats::{compute_length_stats, LengthStats};
 
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -38,31 +38,34 @@ fn main() {
         )
         .arg(
             Arg::with_name("FASTX")
-                .help("The FASTQ/A file to gather stats on, gzip accepted")
+                .help("The FASTQ/A file(s) to gather stats on, gzip accepted")
                 .required(true)
+                .multiple(true)
                 .index(1)
         )
         .get_matches();
 
-    let fastx_fn: String = matches.value_of("FASTX").unwrap().to_string();
+    let fastx_fns: Vec<String> = values_t!(matches.values_of("FASTX"), String).unwrap_or(vec![]);
     let out_fn: String = value_t!(matches.value_of("out_json"), String).unwrap_or_else(|_| "stdout".to_string());
     let length_fn: String = value_t!(matches.value_of("length_json"), String).unwrap_or_else(|_| "".to_string());
 
     info!("Input parameters (required):");
-    info!("\tFASTX: {:?}", fastx_fn);
+    info!("\tFASTX: {:?}", fastx_fns);
     info!("Optional Parameters:");
     info!("\tout_json: {:?}", out_fn);
     info!("\tlength_json: {:?}", length_fn);
 
     //check inputs
-    match File::open(&fastx_fn) {
-        Ok(_) => {}
-        Err(e) => {
-            error!("Failed to open FASTX file: {:?}", fastx_fn);
-            error!("Error: {:?}", e);
-            std::process::exit(exitcode::NOINPUT);
-        }
-    };
+    for fastx_fn in fastx_fns.iter() {
+        match File::open(fastx_fn) {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Failed to open FASTX file: {:?}", fastx_fn);
+                error!("Error: {:?}", e);
+                std::process::exit(exitcode::NOINPUT);
+            }
+        };
+    }
 
     //check outputs
     if out_fn != "stdout" {
@@ -87,10 +90,10 @@ fn main() {
     }
 
     //load the fastx file lengths
-    let length_counts: BTreeMap<usize, u64> = match gather_fastx_stats(&fastx_fn) {
+    let length_counts: BTreeMap<usize, u64> = match gather_multifastx_stats(&fastx_fns) {
         Ok(result) => result,
         Err(e) => {
-            error!("Error while parsing FASTX file: {:?}", fastx_fn);
+            error!("Error while parsing FASTX files: {:?}", fastx_fns);
             error!("Error: {:?}", e);
             std::process::exit(exitcode::IOERR);
         }

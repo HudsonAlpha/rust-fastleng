@@ -2,11 +2,13 @@
 extern crate log;
 extern crate needletail;
 
-use log::info;
+use log::{error, info};
 use needletail::parse_fastx_file;
 use std::collections::BTreeMap;
 
 /// This is the main function for gathering all sequence lengths for a fastx file into a BTreeMap.
+/// # Arguments
+/// * `filename` - the filename to read sequences from
 /// # Examples
 /// ```
 /// use std::collections::BTreeMap;
@@ -15,8 +17,27 @@ use std::collections::BTreeMap;
 /// let counts: BTreeMap<usize, u64> = gather_fastx_stats(&filename).unwrap();
 /// ```
 pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dyn std::error::Error>> {
-    //create an empty stats file and ready the reader
-    let mut hash_stats: BTreeMap<usize, u64> = BTreeMap::new();
+    gather_fastx_stats_with_seed(filename, None)
+}
+
+/// This will gather sequence lengths from a filename and add them to a provided BTreeMap (`initial_counts`).
+/// # Arguments
+/// * `filename` - the filename to read sequences from
+/// * `initial_counts` - if provided, this will use that BTreeMap as the inital counts, otherwise it will create an empty one
+/// # Examples
+/// ```
+/// use std::collections::BTreeMap;
+/// use fastleng::fastx_loader::gather_fastx_stats_with_seed;
+/// let filename = "./test_data/single_string.fa";
+/// let initial_counts: BTreeMap<usize, u64> = BTreeMap::new();
+/// let counts: BTreeMap<usize, u64> = gather_fastx_stats_with_seed(&filename, Some(initial_counts)).unwrap();
+/// ```
+pub fn gather_fastx_stats_with_seed(filename: &str, initial_counts: Option<BTreeMap<usize, u64>>) -> Result<BTreeMap<usize, u64>, Box<dyn std::error::Error>> {
+    //create an empty stats file (or use initial counts) and ready the reader
+    let mut hash_stats: BTreeMap<usize, u64> = match initial_counts {
+        Some(ic) => ic,
+        None => BTreeMap::new()
+    };
     let mut reader = parse_fastx_file(&filename)?;
 
     //go through all the records
@@ -39,6 +60,39 @@ pub fn gather_fastx_stats(filename: &str) -> Result<BTreeMap<usize, u64>, Box<dy
     info!("Finished loading file with {} sequences.", count);
 
     //return the full count list now
+    Ok(hash_stats)
+}
+
+/// This will iterate through multiple fastx files and gather the lengths into a single BTreeMap.
+/// # Arguments
+/// * `filenames` - the filenames to read sequences from
+/// # Examples
+/// ```
+/// use std::collections::BTreeMap;
+/// use fastleng::fastx_loader::gather_multifastx_stats;
+/// let filenames = [
+///     "./test_data/single_string.fa",
+///     "./test_data/five_strings.fa"
+/// ];
+/// let counts: BTreeMap<usize, u64> = gather_multifastx_stats(&filenames).unwrap();
+/// ```
+pub fn gather_multifastx_stats<T: AsRef<str> + std::fmt::Debug>(filenames: &[T]) -> Result<BTreeMap<usize, u64>, Box<dyn std::error::Error>> {
+    /*
+    Notes on the T here: we need to be able to reference as a &str and run the debug formatting for output.
+    The above allows us to pass lists/vecs of Strings/&strs without having to do a bunch of work.
+    Derived from: https://stackoverflow.com/questions/32723794/how-do-i-write-a-function-that-takes-both-owned-and-non-owned-string-collections/32724666#32724666
+    */
+    let mut hash_stats: BTreeMap<usize, u64> = BTreeMap::new();
+    for filename in filenames.iter() {
+        hash_stats = match gather_fastx_stats_with_seed(filename.as_ref(), Some(hash_stats)) {
+            Ok(result) => result,
+            Err(e) => {
+                error!("Error while parsing FASTX file: {:?}", filename);
+                error!("Error: {:?}", e);
+                return Err(e);
+            }
+        };
+    }
     Ok(hash_stats)
 }
 
@@ -132,5 +186,53 @@ mod tests {
         //now do it for real
         let hash_stats = gather_fastx_stats(&filename).unwrap();
         assert_eq!(hash_stats, expected);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_error_handling() {
+        let filename = "./test_data/panic_file.fa";
+        let _hash_stats = gather_fastx_stats(&filename).unwrap();
+    }
+
+    #[test]
+    fn test_multifastx() {
+        let filenames = [
+            "./test_data/single_string.fa",
+            "./test_data/five_strings.fa",
+            "./test_data/small_strings.fa",
+            "./test_data/long_strings.fa"
+        ];
+
+        //get the expected outputs
+        let expected_list = [
+            stats_basic_fasta(),
+            stats_basic_fasta2(),
+            stats_basic_fasta3(),
+            stats_basic_fasta4()
+        ];
+
+        //sum the expected outputs
+        let mut expected: BTreeMap<usize, u64> = BTreeMap::new();
+        for results in expected_list.iter() {
+            for (key, value) in results.iter() {
+                let len_count: &mut u64 = expected.entry(*key).or_insert(0);
+                *len_count += value;
+            }
+        }
+
+        //now do it for real
+        let hash_stats = gather_multifastx_stats(&filenames).unwrap();
+        assert_eq!(hash_stats, expected);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_multifastx_error_handling() {
+        let filenames = [
+            "./test_data/single_string.fa",
+            "./test_data/panic_file.fa"
+        ];
+        let _hash_stats = gather_multifastx_stats(&filenames).unwrap();
     }
 }
