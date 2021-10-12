@@ -78,7 +78,7 @@ fn main() {
             }
         };
     }
-    if length_fn.is_empty() {
+    if !length_fn.is_empty() {
         match File::create(&length_fn) {
             Ok(file) => file,
             Err(e) => {
@@ -123,7 +123,7 @@ fn main() {
         serde_json::to_writer_pretty(out_file, &length_metrics).unwrap();
     }
 
-    if length_fn.is_empty() {
+    if !length_fn.is_empty() {
         info!("Saving length counts to file: {:?}", length_fn);
         let out_file = match File::create(&length_fn) {
             Ok(file) => file,
