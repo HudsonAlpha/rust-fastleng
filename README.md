@@ -4,7 +4,7 @@
 [![Build status](https://github.com/HudsonAlpha/rust-fastleng/actions/workflows/quickstart-ci.yml/badge.svg)](https://github.com/HudsonAlpha/rust-fastleng/actions)
 
 # rust-fastleng
-`fastleng` is a tool created specifically for gathering sequence length information from a FASTQ or FASTA file.
+`fastleng` is a tool created specifically for gathering sequence length information from a FASTQ, FASTA, or unaligned BAM file.
 
 ### Why another FASTX stat tool?
 While there are numerous tools that will generate summary statistics for FASTX files, I was not able to find one that computed all the desired length metrics for _both_ FASTQ and FASTA.
@@ -45,20 +45,22 @@ fastleng {data.fq.gz} > {output.json}
 ### Example output
 ```
 {
-  "total_bases": 1358218298,
-  "total_sequences": 100000,
-  "mean_length": 13582.18298,
-  "median_length": 13664.0,
-  "n50": 13775,
-  "n75": 13027,
-  "n90": 12543
+  "total_bases": 21750112406,
+  "total_sequences": 1305936,
+  "mean_length": 16654.807284583625,
+  "median_length": 16600.0,
+  "n10": 18849,
+  "n25": 17833,
+  "n50": 16739,
+  "n75": 15842,
+  "n90": 15209
 }
 ```
 1. `total_bases` - the total number of basepairs across all sequences in the input file
 2. `total_sequences` - the total number of sequences (i.e. strings) contained in the input file
 3. `mean_length` - the average length of the counted sequences
 4. `median_length` - the median length of the counted sequences
-5. `n50`, `n75`, `n90` - the [N-score](https://en.wikipedia.org/wiki/N50,_L50,_and_related_statistics) of the sequences for 50, 75, and 90 respectively 
+5. `n10`, `n25`, `n50`, `n75`, `n90` - the [N-score](https://en.wikipedia.org/wiki/N50,_L50,_and_related_statistics) of the sequences for 10, 25, 50, 75, and 90 respectively; these should be monotonically decreasing, respectively
 
 ### Options to consider
 1. `-h` - see full list of options and exit

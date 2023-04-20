@@ -112,6 +112,10 @@ pub struct LengthStats {
     pub mean_length: f64,
     /// The median length of the sequences
     pub median_length: f64,
+    /// N10 - 10% of bases are in sequences of length greater than this value
+    pub n10: usize,
+    /// N25 - 25% of bases are in sequences of length greater than this value
+    pub n25: usize,
     /// N50 - 50% of bases are in sequences of length greater than this value
     pub n50: usize,
     /// N75 - 75% of bases are in sequences of length greater than this value
@@ -139,6 +143,8 @@ pub fn compute_length_stats(length_counts: &BTreeMap<usize, u64>) -> LengthStats
     //first get all the totals
     let (total_bases, total_seqs): (u64, u64) = compute_total_counts(length_counts);
     let median_length: f64 = compute_median_length(length_counts, total_seqs);
+    let n10: usize = compute_n_score(length_counts, total_bases, 10);
+    let n25: usize = compute_n_score(length_counts, total_bases, 25);
     let n50: usize = compute_n_score(length_counts, total_bases, 50);
     let n75: usize = compute_n_score(length_counts, total_bases, 75);
     let n90: usize = compute_n_score(length_counts, total_bases, 90);
@@ -149,6 +155,8 @@ pub fn compute_length_stats(length_counts: &BTreeMap<usize, u64>) -> LengthStats
         total_sequences: total_seqs,
         mean_length: (total_bases as f64) / (total_seqs as f64),
         median_length,
+        n10,
+        n25,
         n50,
         n75,
         n90
@@ -308,6 +316,8 @@ mod tests {
             total_sequences: 100,
             mean_length: 10.0,
             median_length: 10.0,
+            n10: 10,
+            n25: 10,
             n50: 10,
             n75: 10,
             n90: 10

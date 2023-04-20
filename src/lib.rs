@@ -16,7 +16,8 @@ let length_counts: BTreeMap<usize, u64> = gather_fastx_stats(&filename).unwrap()
 let length_metrics: LengthStats = compute_length_stats(&length_counts);
 ```
 */
-
+/// Contains the logic for loading length information from an unaligned BAM/SAM file
+pub mod bam_loader;
 /// Contains the logic for loading length information from a fastx file
 pub mod fastx_loader;
 /// Contains the logic for calculating the summary statistics from the counts
