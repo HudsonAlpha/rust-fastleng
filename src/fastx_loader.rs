@@ -1,10 +1,9 @@
 
-extern crate log;
-extern crate needletail;
-
 use log::{error, info};
 use needletail::parse_fastx_file;
 use std::collections::BTreeMap;
+
+use crate::bam_loader::gather_bam_stats_with_seed;
 
 /// This is the main function for gathering all sequence lengths for a fastx file into a BTreeMap.
 /// # Arguments
@@ -38,7 +37,7 @@ pub fn gather_fastx_stats_with_seed(filename: &str, initial_counts: Option<BTree
         Some(ic) => ic,
         None => BTreeMap::new()
     };
-    let mut reader = parse_fastx_file(&filename)?;
+    let mut reader = parse_fastx_file(filename)?;
 
     //go through all the records
     let mut count: usize = 0;
@@ -84,14 +83,26 @@ pub fn gather_multifastx_stats<T: AsRef<str> + std::fmt::Debug>(filenames: &[T])
     */
     let mut hash_stats: BTreeMap<usize, u64> = BTreeMap::new();
     for filename in filenames.iter() {
-        hash_stats = match gather_fastx_stats_with_seed(filename.as_ref(), Some(hash_stats)) {
-            Ok(result) => result,
-            Err(e) => {
-                error!("Error while parsing FASTX file: {:?}", filename);
-                error!("Error: {:?}", e);
-                return Err(e);
-            }
-        };
+        if filename.as_ref().ends_with(".bam") || filename.as_ref().ends_with(".sam") {
+            hash_stats = match gather_bam_stats_with_seed(filename.as_ref(), Some(hash_stats)) {
+                Ok(result) => result,
+                Err(e) => {
+                    error!("Error while parsing BAM file: {:?}", filename);
+                    error!("Error: {:?}", e);
+                    return Err(e);
+                }
+            };
+        }
+        else {
+            hash_stats = match gather_fastx_stats_with_seed(filename.as_ref(), Some(hash_stats)) {
+                Ok(result) => result,
+                Err(e) => {
+                    error!("Error while parsing FASTX file: {:?}", filename);
+                    error!("Error: {:?}", e);
+                    return Err(e);
+                }
+            };
+        }
     }
     Ok(hash_stats)
 }
@@ -202,6 +213,37 @@ mod tests {
             "./test_data/five_strings.fa",
             "./test_data/small_strings.fa",
             "./test_data/long_strings.fa"
+        ];
+
+        //get the expected outputs
+        let expected_list = [
+            stats_basic_fasta(),
+            stats_basic_fasta2(),
+            stats_basic_fasta3(),
+            stats_basic_fasta4()
+        ];
+
+        //sum the expected outputs
+        let mut expected: BTreeMap<usize, u64> = BTreeMap::new();
+        for results in expected_list.iter() {
+            for (key, value) in results.iter() {
+                let len_count: &mut u64 = expected.entry(*key).or_insert(0);
+                *len_count += value;
+            }
+        }
+
+        //now do it for real
+        let hash_stats = gather_multifastx_stats(&filenames).unwrap();
+        assert_eq!(hash_stats, expected);
+    }
+
+    #[test]
+    fn test_multimixed() {
+        let filenames = [
+            "./test_data/single_string.fa",
+            "./test_data/five_strings.sam",
+            "./test_data/small_strings.fa",
+            "./test_data/long_strings.bam"
         ];
 
         //get the expected outputs

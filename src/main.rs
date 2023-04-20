@@ -20,8 +20,8 @@ fn main() {
 
     let matches = App::new("fastleng")
         .version(VERSION.unwrap_or("?"))
-        .author("J. Matthew Holt <jholt@hudsonalpha.org>")
-        .about("fastleng - a sequence length statistics generator for fastx files")
+        .author("J. Matthew Holt <mholt@pacificbiosciences.com>")
+        .about("fastleng - a sequence length statistics generator for fastx/uBAM files")
         .arg(
             Arg::with_name("out_json")
             .short("o")
@@ -38,7 +38,7 @@ fn main() {
         )
         .arg(
             Arg::with_name("FASTX")
-                .help("The FASTQ/A file(s) to gather stats on, gzip accepted")
+                .help("The FASTQ/A or uBAM file(s) to gather stats on, gzip accepted")
                 .required(true)
                 .multiple(true)
                 .index(1)
@@ -60,7 +60,7 @@ fn main() {
         match File::open(fastx_fn) {
             Ok(_) => {}
             Err(e) => {
-                error!("Failed to open FASTX file: {:?}", fastx_fn);
+                error!("Failed to open file: {:?}", fastx_fn);
                 error!("Error: {:?}", e);
                 std::process::exit(exitcode::NOINPUT);
             }
@@ -93,7 +93,7 @@ fn main() {
     let length_counts: BTreeMap<usize, u64> = match gather_multifastx_stats(&fastx_fns) {
         Ok(result) => result,
         Err(e) => {
-            error!("Error while parsing FASTX files: {:?}", fastx_fns);
+            error!("Error while parsing input files: {:?}", fastx_fns);
             error!("Error: {:?}", e);
             std::process::exit(exitcode::IOERR);
         }
@@ -108,7 +108,7 @@ fn main() {
     //this is what we should put in the file
     if out_fn == "stdout" {
         let pretty_json: String = serde_json::to_string_pretty(&length_metrics).unwrap();
-        println!("{}", pretty_json);
+        println!("{pretty_json}");
     }
     else {
         info!("Saving results to file: {:?}", out_fn);
